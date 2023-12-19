@@ -1,5 +1,8 @@
 # OpenAI Assistan(ts)
 
+[![build status](https://img.shields.io/github/actions/workflow/status/ChuckJonas/assistan-ts/test.yml?label=CI&logo=github)](https://github.com/ChuckJonas/assistan-ts/actions/workflows/test.yml)
+[![npm version](https://img.shields.io/npm/v/assistan-ts.svg)](https://www.npmjs.org/package/assistan-ts)
+
 `npm i assistan-ts`
 
 A lightweight framework for building and running code first, type-safe assistants.  
