@@ -1,0 +1,30 @@
+{
+  "name": "assistan-ts",
+  "version": "0.0.1",
+  "description": "A typesafe and code-first library to define and run OpenAI assistants",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "bun test"
+  },
+  "keywords": [
+    "openai",
+    "assistants-api"
+  ],
+  "author": "charlie jonas",
+  "license": "MIT",
+  "devDependencies": {
+    "bun": "^1.0.18",
+    "bun-types": "^1.0.18-1",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "openai": ">4.17.0"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.31.28",
+    "ajv": "^8.12.0",
+    "ajv-formats": "^2.1.1"
+  }
+}
