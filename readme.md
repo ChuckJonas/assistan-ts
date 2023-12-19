@@ -22,7 +22,7 @@ This library aims to make it easy to manage assistants, without introducing heav
 
 
 ```typescript
-import { Type, definition, assistant } from "../src";
+import { Type, definition, assistant } from 'assistan-ts';
 
   const def = definition({
     key: "Schedul-O-Bot-3000", // 'unique' key added to metadata for linking
