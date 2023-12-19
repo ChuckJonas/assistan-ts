@@ -7,14 +7,17 @@
 
 A lightweight framework for building and running code first, type-safe assistants.  
 
-This library aims to make it easy to manage assistants, without introducing heavy abstractions or opinionated frameworks. 
+This library aims to make it easy to create & run assistants, without introducing heavy abstractions or departing too far from the official `openai` library. 
 
 **Key Features:**
 
 - Define Assistants using [`typebox`](https://github.com/sinclairzx81/typebox) schemas
 - sync changes with OpenAI
 - Parse & validate arguments to tool calls
-- Automatically poll runs for completion
+- Automatically poll `runs` for completion
+
+> **Warning**  
+> Both this library & openai's assistants api are still in early development and is subject to change.
 
 ## Usage
 
@@ -56,7 +59,9 @@ import { Type, definition, assistant } from 'assistan-ts';
   });
 ```
 
-*NOTE: Not all typebox types are supported by OpenAI at this time*
+> **NOTE**  
+> Not all `typebox` types are supported by OpenAI at this time
+
 
 ### Link the Assistant to OpenAI
 
@@ -66,7 +71,8 @@ const linked = await def.link(openai);
 
 This will create the assistant if it doesn't exist, and update it to match the schema if there is any drift.
 
-*WARNING: By default, this will update the assistant to match the schema. If you want to disable this behavior, pass `{ updateMode: "skip" }` to the `link` function.*
+> **Warning**  
+>  By default, this will update the assistant to match the schema. If you want to disable this behavior, pass `{ updateMode: "skip" }` to the `link` function.
 
 
 ### Create an instance of your assistant
