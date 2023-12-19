@@ -11,7 +11,7 @@ This library aims to make it easy to manage assistants, without introducing heav
 
 **Key Features:**
 
-- Define Assistants using `typebox` schemas
+- Define Assistants using [`typebox`](https://github.com/sinclairzx81/typebox) schemas
 - sync changes with OpenAI
 - Parse & validate arguments to tool calls
 - Automatically poll runs for completion
@@ -55,8 +55,6 @@ import { Type, definition, assistant } from "../src";
     },
   });
 ```
-
-Tools are defined using (`typebox`)[https://github.com/sinclairzx81/typebox].  
 
 *NOTE: Not all typebox types are supported by OpenAI at this time*
 
