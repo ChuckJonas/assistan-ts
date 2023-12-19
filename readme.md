@@ -16,7 +16,7 @@ This library aims to make it easy to create & run assistants, without introducin
 - Parse & validate arguments to tool calls
 - Automatically poll `runs` for completion
 
-> **Warning**  
+> [!WARNING]
 > Both this library & openai's assistants api are still in early development and is subject to change.
 
 ## Usage
@@ -59,7 +59,7 @@ import { Type, definition, assistant } from 'assistan-ts';
   });
 ```
 
-> **NOTE**  
+> [!NOTE]
 > Not all `typebox` types are supported by OpenAI at this time
 
 
@@ -71,7 +71,7 @@ const linked = await def.link(openai);
 
 This will create the assistant if it doesn't exist, and update it to match the schema if there is any drift.
 
-> **Warning**  
+> [!WARNING]
 >  By default, this will update the assistant to match the schema. If you want to disable this behavior, pass `{ updateMode: "skip" }` to the `link` function.
 
 
