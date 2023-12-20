@@ -1,6 +1,6 @@
 {
   "name": "assistan-ts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A typesafe and code-first library to define and run OpenAI assistants",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
