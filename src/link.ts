@@ -4,7 +4,8 @@ import {
   AssistantDefinition,
   FunctionTool,
 } from "./definition";
-import { Assistant, AssistantCreateParams, OpenAI } from "./types/types";
+import { Assistant, AssistantCreateParams, OpenAI } from "./types/openai";
+import { diff } from "deep-diff";
 
 export interface LinkedDefinition<T extends Record<string, FunctionTool>>
   extends AssistantDefinition<T> {
@@ -19,6 +20,12 @@ export type LinkOptions = {
   allowCreate?: boolean;
   /** What to do if drift is detected.  Default: `update` */
   updateMode?: "update" | "throw" | "skip";
+  beforeUpdate?: (
+    diff: string[],
+    local: AssistantCreateParams,
+    remote: Assistant
+  ) => boolean;
+  afterUpdate?: (assistant: Assistant) => void;
 };
 
 export const link =
@@ -29,7 +36,13 @@ export const link =
     openai: OpenAI,
     options: LinkOptions
   ): Promise<LinkedDefinition<T>> => {
-    const { assistantId, allowCreate = true, updateMode = "update" } = options;
+    const {
+      assistantId,
+      allowCreate = true,
+      updateMode = "update",
+      afterUpdate,
+      beforeUpdate = () => true,
+    } = options;
     const local = toPayload(definition);
     let remote: Assistant | undefined;
 
@@ -47,10 +60,14 @@ export const link =
       const differences = findDifferences(remote, local);
 
       if (differences.length > 0) {
-        if (updateMode === "update") {
+        if (
+          updateMode === "update" &&
+          beforeUpdate(differences, local, remote)
+        ) {
           //update the assistant.
           // Note: In testing, this seems to use "json patch" style updates where it only changes explicitly set fields
           remote = await openai.beta.assistants.update(remote.id, local);
+          afterUpdate?.(remote);
         } else {
           throw new Error(
             `Assistant with key ${definition.key} is out of sync with remote.  To automatically update, set 'updateMode' to 'update'`
@@ -93,13 +110,9 @@ const compareTools = (
   remote?: Assistant["tools"],
   local?: Assistant["tools"]
 ) => {
-  // first shallow compare
-  if (remote?.length !== local?.length) {
-    return false;
-  }
-
-  //TODO implement proper sort
   remote?.sort();
   local?.sort();
-  return JSON.stringify(remote) === JSON.stringify(local);
+  const differences = diff(remote, local);
+
+  return (differences?.length ?? 0) === 0;
 };

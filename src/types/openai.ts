@@ -1,6 +1,6 @@
 import type OpenAI from "openai";
 
-export type { OpenAI };
+export { OpenAI };
 
 export type Assistant = OpenAI.Beta.Assistants.Assistant;
 

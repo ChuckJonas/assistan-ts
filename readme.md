@@ -169,3 +169,19 @@ while (toolActions) {
 | formatValidationError | (errors: ErrorObject<string, Record<string, any>, unknown>[], ctx: ToolContext) => string | Formats validation error messages |
 | formatOutput | (output: Output, ctx: ToolContext) => string | Formats the output of the tool's operation |
 
+## Running Examples
+
+This project contains a number of examples to demonstrate the use of the library. The examples are located in the `examples` directory.
+
+To run an example, use the following command:
+
+1. Set the `OAI_KEY` environment variable to your OpenAI API key (`export OAI_KEY=<your key>`)
+
+2. use `bun` to run the index file:
+
+```bash
+npx bun examples/<example name>.ts
+```
+
+> [!NOTE]
+> Checkout the [agentCli.ts](/examples/_lib/agentCLI.ts) to see a simple demo of how to manage the agent lifecycle. 

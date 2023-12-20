@@ -1,9 +1,9 @@
 import { Type, Static, TSchema } from "@sinclair/typebox";
 import { AssistantDefinition, FunctionTool, definition } from "./definition";
 import addFormats from "ajv-formats";
-import Ajv, { ErrorObject, ValidateFunction } from "ajv";
+import Ajv, { ErrorObject } from "ajv";
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
-import { ToolOutput } from "./types/types";
+import { ToolOutput } from "./types/openai";
 
 type Output = string | number | boolean | object;
 

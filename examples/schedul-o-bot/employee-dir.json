@@ -1,0 +1,58 @@
+[
+    {
+      "id": "1000",
+      "name": "John Chen",
+      "email": "ariachen@example.com",
+      "department": "Marketing",
+      "role": "Marketing Manager"
+    },
+    {
+      "id": "1001",
+      "name": "Alana Marie",
+      "email": "Alana@example.com",
+      "department": "Marketing",
+      "role": "Designer"
+    },
+    {
+      "id": "1002",
+      "name": "Luis Rodriguez",
+      "email": "luisrodriguez@example.com",
+      "department": "Sales",
+      "role": "Sales Representative"
+    },
+    {
+      "id": "1003",
+      "name": "David Anderson",
+      "email": "fatimazahra@example.com",
+      "department": "Human Resources",
+      "role": "HR Coordinator"
+    },
+    {
+      "id": "1004",
+      "name": "Mark Tanaka",
+      "email": "keijitanaka@example.com",
+      "department": "Engineering",
+      "role": "IT Support Specialist"
+    },
+    {
+      "id": "1005",
+      "name": "Emily Thompson",
+      "email": "emilythompson@example.com",
+      "department": "Finance",
+      "role": "Financial Analyst"
+    },
+    {
+      "id": "1006",
+      "name": "Omar Ali",
+      "email": "omarali@example.com",
+      "department": "Engineering",
+      "role": "Developer"
+    },
+    {
+      "id": "1007",
+      "name": "Nina Summers",
+      "email": "ninapatel@example.com",
+      "department": "Engineering",
+      "role": "Data Engineer"
+    }
+]

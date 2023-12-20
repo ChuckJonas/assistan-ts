@@ -1,6 +1,5 @@
-import OpenAI from "openai";
 import { ToolBox, initToolBox } from "./toolbox";
-import { Run, ToolOutput } from "./types/types";
+import { Run, ToolOutput, OpenAI } from "./types/openai";
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
 import { FunctionTool } from "./definition";
 
