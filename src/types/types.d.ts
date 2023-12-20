@@ -15,3 +15,6 @@ export type RunSubmitToolOutputsParams =
 
 export type ToolOutput =
   OpenAI.Beta.Threads.Runs.RunSubmitToolOutputsParams.ToolOutput;
+
+export type RequiredActionFunctionToolCall =
+  OpenAI.Beta.Threads.Runs.RequiredActionFunctionToolCall;

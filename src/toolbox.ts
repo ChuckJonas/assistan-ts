@@ -49,11 +49,17 @@ export const defaultOptions: ToolOptions = {
   formatOutput: defaultOutputFormatter,
 };
 
+export type ToolBox<T extends Record<string, FunctionTool>> = {
+  toolsFn: ToolsDefsToToolbox<T>;
+  options: ToolOptions;
+  handleAction: (action: RequiredActionFunctionToolCall) => Promise<ToolOutput>;
+};
+
 export const initToolBox = <T extends Record<string, FunctionTool>>(
   definition: AssistantDefinition<T>,
   toolsFn: ToolsDefsToToolbox<T>,
   options: Partial<ToolOptions> = defaultOptions
-) => {
+): ToolBox<T> => {
   const opts = { ...defaultOptions, ...options };
   const { jsonParser, validator, formatOutput, formatToolError } = opts;
   return {
@@ -66,7 +72,6 @@ export const initToolBox = <T extends Record<string, FunctionTool>>(
 
       const ctx: ToolContext = { action, options: opts, toolDef };
 
-      console.log(action.function);
       try {
         let output: Output;
         if (!toolDef?.parameters) {
@@ -146,7 +151,6 @@ function defaultOutputFormatter(output: Output) {
 
 function defaultErrorFormatter(error: unknown, ctx: ToolContext) {
   if (error instanceof AssistantVisibleError) {
-    console.log("ERROR MATCHED!");
     return `Error calling ${ctx.action.function.name}: ${error.message}`;
   }
   throw error;

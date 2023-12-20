@@ -130,6 +130,24 @@ await complete({ interval: 1000, abortCtrl });
 const messages = await openai.beta.threads.messages.list(thread.id);
 ```
 
+Alternately, you can use `nextActions` to better control the execution of the tools:
+
+```typescript
+
+const { nextActions } = await scheduleBot.run.create({
+  threadId: thread.id,
+});
+
+let toolActions = await toolsRequired();
+
+while (toolActions) {
+  //let user confirm
+  if(confirm(`Continue with ${JSON.stringify(toolActions.toolCalls, null, 2)}?`)){
+    toolActions = await toolActions.execute( /* you may provide overrides outputs here */ );
+  }
+}
+```
+
 ## Configuration
 
 ### Link Options

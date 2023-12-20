@@ -1,6 +1,6 @@
 import { FunctionTool } from "./definition";
 import { LinkedDefinition } from "./link";
-import { RunOptions, waitForRun } from "./run";
+import { RunOptions, waitForComplete, waitForRequiredAction } from "./run";
 import { ToolOptions, ToolsDefsToToolbox, initToolBox } from "./toolbox";
 import { OpenAI, Run, RunCreateParams } from "./types/types";
 
@@ -15,22 +15,27 @@ export const assistant = <T extends Record<string, FunctionTool>>({
   tools,
   toolOptions,
 }: Props<T>) => {
-  const toolBox = initToolBox(definition, tools, toolOptions);
+  const toolbox = initToolBox(definition, tools, toolOptions);
 
   const setupRun = (run: Run) => ({
     run,
-    complete: async (opts?: RunOptions) => {
-      return waitForRun(toolBox)({
+    toolsRequired: async (opts?: RunOptions) =>
+      waitForRequiredAction(run, {
+        toolbox,
         openai: definition.openai,
-        run,
         ...opts,
-      });
-    },
+      }),
+    complete: async (opts?: RunOptions) =>
+      waitForComplete(run, {
+        toolbox,
+        openai: definition.openai,
+        ...opts,
+      }),
   });
 
   return {
     definition,
-    toolBox,
+    toolbox,
     run: {
       create: async (params: {
         threadId: string;
