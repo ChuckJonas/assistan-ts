@@ -130,11 +130,11 @@ await complete({ interval: 1000, abortCtrl });
 const messages = await openai.beta.threads.messages.list(thread.id);
 ```
 
-Alternately, you can use `nextActions` to better control the execution of the tools:
+Alternately, you can use `toolsRequired` to better control the execution of the tools:
 
 ```typescript
 
-const { nextActions } = await scheduleBot.run.create({
+const { toolsRequired } = await scheduleBot.run.create({
   threadId: thread.id,
 });
 
