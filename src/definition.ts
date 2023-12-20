@@ -5,7 +5,7 @@ import {
   AssistantCreateParams,
   AssistantFunction,
   OpenAI,
-} from "./types/types";
+} from "./types/openai";
 
 export const METADATA_KEY = "__key__";
 

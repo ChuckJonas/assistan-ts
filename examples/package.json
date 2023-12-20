@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    
+    "colors": "^1.4.0",
+    "openai": "^4.24.0",
+    "assistan-ts": "0.0.2"
   }
-  
 }

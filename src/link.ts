@@ -4,7 +4,7 @@ import {
   AssistantDefinition,
   FunctionTool,
 } from "./definition";
-import { Assistant, AssistantCreateParams, OpenAI } from "./types/types";
+import { Assistant, AssistantCreateParams, OpenAI } from "./types/openai";
 
 export interface LinkedDefinition<T extends Record<string, FunctionTool>>
   extends AssistantDefinition<T> {
