@@ -13,6 +13,8 @@ const openai = new OpenAI({
   apiKey: process.env["OAI_KEY"],
 });
 
+let cli: AgentCLI;
+
 (async () => {
   const def = definition({
     key: "Schedul-O-Bot-3000", // 'unique' key added to metadata for linking
@@ -35,7 +37,6 @@ const openai = new OpenAI({
       },
       schedule_meeting: {
         description: "Schedule a meeting with an employee",
-        haltOnRequest: true,
         parameters: Type.Object({
           employee_ids: Type.Array(
             Type.String({
@@ -59,6 +60,11 @@ const openai = new OpenAI({
   const linked = await def.link(openai, {
     allowCreate: true,
     updateMode: "update",
+    beforeUpdate: (changes) => {
+      console.log("Drift Detected on the following fields:", changes);
+      return true;
+    },
+    afterUpdate: (assistant) => console.log("assistant updated", assistant.id),
   });
 
   const scheduleBot = assistant({
@@ -81,15 +87,12 @@ const openai = new OpenAI({
     },
   });
 
-  const cli = new AgentCLI(scheduleBot, {
+  cli = new AgentCLI(scheduleBot, {
     intro: "You are chatting with Schedul-O-Bot-3000.  How can I assist you?",
     confirmToolRuns: ["schedule_meeting"],
   });
-
   await cli.start();
-
-  cli.close();
 })()
   .then(console.log)
   .catch(console.error)
-  .finally();
+  .finally(() => cli?.close());

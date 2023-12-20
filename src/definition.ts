@@ -56,7 +56,7 @@ export const toPayload = (
         functionTools[toolKey].parameters[Kind] == Type.Void()[Kind] ||
         functionTools[toolKey].parameters[Kind] == Type.Undefined()[Kind]
       ) {
-        delete functionTools[toolKey]["parameters"];
+        functionTools[toolKey]["parameters"] = null;
       }
       return {
         type: "function",
