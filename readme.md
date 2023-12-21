@@ -171,6 +171,8 @@ while (toolActions) {
 
 ## Running Examples
 
+<img width="933" alt="Cursor_and_agentCLI_ts_—_assistan-ts__Codespaces__cuddly_disco__—_Visual_Studio_Code" src="https://github.com/ChuckJonas/assistan-ts/assets/5217568/b547c1dc-7725-492c-b98a-c9e37a5e8b79">
+
 This project contains a number of examples to demonstrate the use of the library. The examples are located in the `examples` directory.
 
 To run an example, use the following command:
@@ -181,8 +183,10 @@ To run an example, use the following command:
 1. use `bun` to run the index file:
 
 ```bash
-npx bun <example name>.ts
+npx bun <example name>/index.ts
 ```
 
 > [!NOTE]
 > Checkout the [agentCli.ts](/examples/_lib/agentCLI.ts) to see a simple demo of how to manage the agent lifecycle. 
+
+
