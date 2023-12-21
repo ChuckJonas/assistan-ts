@@ -60,6 +60,7 @@ let cli: AgentCLI;
   const linked = await def.link(openai, {
     allowCreate: true,
     updateMode: "update",
+    afterCreate: (assistant) => console.log("assistant created", assistant.id),
     beforeUpdate: (changes) => {
       console.log("Drift Detected on the following fields:", changes);
       return true;

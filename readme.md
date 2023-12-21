@@ -175,12 +175,13 @@ This project contains a number of examples to demonstrate the use of the library
 
 To run an example, use the following command:
 
+1. `cd examples`
+1. `npm i`
 1. Set the `OAI_KEY` environment variable to your OpenAI API key (`export OAI_KEY=<your key>`)
-
-2. use `bun` to run the index file:
+1. use `bun` to run the index file:
 
 ```bash
-npx bun examples/<example name>.ts
+npx bun <example name>.ts
 ```
 
 > [!NOTE]

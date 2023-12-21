@@ -1,10 +1,11 @@
 {
   "name": "assistan-ts",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A typesafe and code-first library to define and run OpenAI assistants",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "prepublish": "npm run build",
     "build": "tsc",
     "test": "bun test src"
   },

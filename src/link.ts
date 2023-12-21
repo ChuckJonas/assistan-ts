@@ -20,6 +20,7 @@ export type LinkOptions = {
   allowCreate?: boolean;
   /** What to do if drift is detected.  Default: `update` */
   updateMode?: "update" | "throw" | "skip";
+  afterCreate?: (assistant: Assistant) => void;
   beforeUpdate?: (
     diff: string[],
     local: AssistantCreateParams,
@@ -40,6 +41,7 @@ export const link =
       assistantId,
       allowCreate = true,
       updateMode = "update",
+      afterCreate,
       afterUpdate,
       beforeUpdate = () => true,
     } = options;
@@ -79,6 +81,7 @@ export const link =
     if (!remote && allowCreate) {
       //create the assistant
       remote = await openai.beta.assistants.create(local);
+      afterCreate?.(remote);
     }
 
     if (!remote) {
