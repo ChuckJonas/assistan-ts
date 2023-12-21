@@ -2,7 +2,7 @@ import { FunctionTool } from "./definition";
 import { LinkedDefinition } from "./link";
 import {
   RunOptions,
-  ToolsRequired,
+  ToolsRequiredResponse,
   waitForComplete,
   waitForRequiredAction,
 } from "./run";
@@ -22,17 +22,15 @@ export type Assistant<T extends Record<string, FunctionTool>> = {
       threadId: string;
       body?: Omit<RunCreateParams, "assistant_id">;
       options?: OpenAI.RequestOptions;
-    }) => Promise<{
-      run: OpenAI.Beta.Threads.Runs.Run;
-      toolsRequired: (opts?: RunOptions) => Promise<ToolsRequired | null>;
-      complete: (opts?: RunOptions) => Promise<OpenAI.Beta.Threads.Runs.Run>;
-    }>;
-    load: (run: Run) => {
-      run: OpenAI.Beta.Threads.Runs.Run;
-      toolsRequired: (opts?: RunOptions) => Promise<ToolsRequired | null>;
-      complete: (opts?: RunOptions) => Promise<OpenAI.Beta.Threads.Runs.Run>;
-    };
+    }) => Promise<SetupRunResponse>;
+    load: (run: Run) => SetupRunResponse;
   };
+};
+
+type SetupRunResponse = {
+  run: OpenAI.Beta.Threads.Runs.Run;
+  toolsRequired: (opts?: RunOptions) => Promise<ToolsRequiredResponse>;
+  complete: (opts?: RunOptions) => Promise<OpenAI.Beta.Threads.Runs.Run>;
 };
 
 type Props<T extends Record<string, FunctionTool>> = {
@@ -48,7 +46,7 @@ export const assistant = <T extends Record<string, FunctionTool>>({
 }: Props<T>): Assistant<T> => {
   const toolbox = initToolBox(definition, tools, toolOptions);
 
-  const setupRun = (run: Run) => ({
+  const setupRun = (run: Run): SetupRunResponse => ({
     run,
     toolsRequired: async (opts?: RunOptions) =>
       waitForRequiredAction(run, {

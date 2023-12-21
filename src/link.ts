@@ -105,6 +105,7 @@ const findDifferences = (
   const comparisons: Record<string, boolean> = {
     name: remote.name === local.name,
     // description: remote.description === local.description,
+    instructions: remote.instructions === local.instructions,
     model: remote.model === local.model,
     tools: compareTools(remote.tools, local.tools),
   };

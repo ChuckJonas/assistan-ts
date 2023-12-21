@@ -42,7 +42,12 @@ export type ToolsRequired = {
   toolCalls: RequiredActionFunctionToolCall[];
   execute: (
     responseOverrides?: Record<string, string>
-  ) => Promise<ToolsRequired | null>;
+  ) => Promise<ToolsRequiredResponse>;
+};
+
+export type ToolsRequiredResponse = {
+  run: Run;
+  toolsRequest: ToolsRequired | null;
 };
 
 export const waitForRequiredAction = async <
@@ -50,21 +55,24 @@ export const waitForRequiredAction = async <
 >(
   run: Run,
   params: RunParams<T>
-): Promise<ToolsRequired | null> => {
+): Promise<ToolsRequiredResponse> => {
   run = await poll(run, params);
 
   // handle all actions
   if (run.status === "requires_action" && run.required_action) {
     return {
-      toolCalls: run.required_action.submit_tool_outputs.tool_calls,
-      execute: async (responseOverrides) => {
-        run = await runAndSubmitTools(run, params, responseOverrides);
-        return await waitForRequiredAction(run, params);
+      run,
+      toolsRequest: {
+        toolCalls: run.required_action.submit_tool_outputs.tool_calls,
+        execute: async (responseOverrides) => {
+          run = await runAndSubmitTools(run, params, responseOverrides);
+          return await waitForRequiredAction(run, params);
+        },
       },
     };
   }
 
-  return null;
+  return { run, toolsRequest: null };
 };
 
 async function runAndSubmitTools(

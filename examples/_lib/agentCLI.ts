@@ -2,11 +2,16 @@
  * Agent CLI
  * Quick and dirty agent runner for demo'ing `assistan-ts`
  */
+import { Assistant, ToolsRequired } from "assistan-ts";
+import colors from "colors";
 import readline from "node:readline/promises";
 import type OpenAI from "openai";
-import colors from "colors";
-import { Assistant, ToolsRequired } from "assistan-ts";
 import { Threads } from "openai/resources/beta/threads/threads";
+import {
+  downloadFile,
+  parseAnnotationsFromThread,
+  parseImagesFromThread,
+} from "./files";
 
 const COLORS = {
   assistant: colors.blue,
@@ -19,6 +24,9 @@ export type AgentCLIOptions = {
   write: (...msgs: string[]) => void;
   /** Pass false to run all actions without confirmation. Or pass an string[] of action keys to halt on.  Defaults to true */
   confirmToolRuns?: boolean | string[];
+  threadId?: string;
+  // path to write generated files and images to
+  outputPath?: string;
 };
 
 const DEFAULT_OPTIONS: AgentCLIOptions = {
@@ -28,11 +36,14 @@ const DEFAULT_OPTIONS: AgentCLIOptions = {
 };
 
 export class AgentCLI {
+  thread: Threads.Thread | undefined = undefined;
   private rl: readline.Interface;
   private assistant: Assistant<any>;
-  private thread: Threads.Thread | undefined = undefined;
   private openai: OpenAI;
   private options: AgentCLIOptions;
+
+  private queuedMessages: OpenAI.Beta.Threads.Messages.MessageCreateParams[] =
+    [];
 
   constructor(assistant: Assistant<any>, options?: Partial<AgentCLIOptions>) {
     this.options = { ...DEFAULT_OPTIONS, ...(options ?? {}) };
@@ -44,47 +55,102 @@ export class AgentCLI {
     this.openai = assistant.definition.openai;
   }
 
-  async start() {
+  start = async () => {
+    if (this.options.threadId) {
+      //load an existing thread and display past messages
+      this.thread = await this.openai.beta.threads.retrieve(
+        this.options.threadId
+      );
+
+      this.options.write(`Restoring From Thread: ${this.thread.id}}`);
+      const messages = await this.openai.beta.threads.messages.list(
+        this.thread.id
+      );
+      this.options.write(
+        messages.data.map(this.formatThreadMessage).reverse().join("\n")
+      );
+    } else {
+      this.thread = await this.openai.beta.threads.create();
+      this.options.write(colors.italic(`Created Thread: ${this.thread.id}}`));
+    }
+
     this.options.write(
       COLORS.assistant(formatMessage("assistant", this.options.intro))
     );
-    this.thread = await this.openai.beta.threads.create();
 
     let userChat = await this.chat("");
     while (userChat != "exit") {
-      this.openai.beta.threads.messages.create(this.thread.id, {
+      // pop all queued messages and create messages for them
+      while (this.queuedMessages.length) {
+        const message = this.queuedMessages.pop()!;
+        await this.openai.beta.threads.messages.create(this.thread.id, message);
+      }
+
+      await this.openai.beta.threads.messages.create(this.thread.id, {
         role: "user",
         content: userChat,
       });
-      const { toolsRequired, complete } = await this.assistant.run.create({
+      let { run, toolsRequired, complete } = await this.assistant.run.create({
         threadId: this.thread.id,
       });
 
       if (this.options.confirmToolRuns === false) {
         await complete();
       } else {
-        let toolActions = await toolsRequired();
-        while (toolActions) {
-          const responses = await this.confirmTools(toolActions);
+        let toolsRequest: ToolsRequired | null;
+        ({ run, toolsRequest } = await toolsRequired());
+        while (toolsRequest) {
+          const responses = await this.confirmTools(toolsRequest);
 
           if (!responses) {
             return;
           }
-          toolActions = await toolActions.execute(responses);
+          ({ run, toolsRequest } = await toolsRequest.execute(responses));
         }
       }
 
       const messages = await this.openai.beta.threads.messages.list(
         this.thread.id
       );
+
+      if (this.options.outputPath !== undefined) {
+        await Promise.all(
+          parseAnnotationsFromThread(messages).map((it) =>
+            downloadFile(
+              this.openai,
+              it.file_path.file_id,
+              this.options.outputPath!
+            )
+          )
+        );
+
+        await Promise.all(
+          parseImagesFromThread(messages).map((it) =>
+            downloadFile(
+              this.openai,
+              it.file_id,
+              this.options.outputPath!,
+              `${it.file_id}.png`
+            )
+          )
+        );
+      }
+
       const lastMessage = messages.data[0];
       this.displayMessage(lastMessage);
 
       userChat = await this.chat("");
     }
-  }
+  };
 
-  async confirmTools(toolActions: ToolsRequired) {
+  /** This is needed so tools can add messages while the run is active */
+  queueMessage = (
+    message: OpenAI.Beta.Threads.Messages.MessageCreateParams
+  ) => {
+    this.queuedMessages.push(message);
+  };
+
+  private confirmTools = async (toolActions: ToolsRequired) => {
     const overrides: Record<string, string> = {};
 
     const confirmOn = Array.isArray(this.options.confirmToolRuns)
@@ -123,41 +189,43 @@ export class AgentCLI {
       }
     }
     return overrides;
-  }
+  };
 
-  displayMessage(msg: OpenAI.Beta.Threads.Messages.ThreadMessage): void {
-    this.options.write(COLORS.assistant(formatThreadMessage(msg)));
-  }
+  private displayMessage = (
+    msg: OpenAI.Beta.Threads.Messages.ThreadMessage
+  ) => {
+    this.options.write(COLORS.assistant(this.formatThreadMessage(msg)));
+  };
 
-  chat(prompt: string): Promise<string> {
+  private chat = (prompt: string) => {
     this.options.write(colors.italic(`${prompt}`));
     return this.rl.question(COLORS.user(`USER> `));
-  }
+  };
 
-  close(): void {
+  formatThreadMessage = (msg: OpenAI.Beta.Threads.Messages.ThreadMessage) => {
+    return formatMessage(
+      msg.role,
+      msg.content.map(this.formatMessageContent).join("\n")
+    );
+  };
+
+  private formatMessageContent = (
+    message:
+      | OpenAI.Beta.Threads.Messages.MessageContentText
+      | OpenAI.Beta.Threads.Messages.MessageContentImageFile
+  ) => {
+    switch (message.type) {
+      case "text":
+        return message.text.value;
+      case "image_file":
+        return `file: ${this.options.outputPath}/${message.image_file.file_id}.png`;
+    }
+  };
+
+  close = () => {
     this.rl?.close();
-  }
+  };
 }
 
 const formatMessage = (role: string, msg: string) =>
   `${role.toLocaleUpperCase()}>\n${msg}`;
-
-function formatThreadMessage(msg: OpenAI.Beta.Threads.Messages.ThreadMessage) {
-  return formatMessage(
-    msg.role,
-    msg.content.map(formatMessageContent).join("\n")
-  );
-}
-
-function formatMessageContent(
-  message:
-    | OpenAI.Beta.Threads.Messages.MessageContentText
-    | OpenAI.Beta.Threads.Messages.MessageContentImageFile
-) {
-  switch (message.type) {
-    case "text":
-      return message.text.value;
-    case "image_file":
-      return `file: ${message.image_file.file_id}`;
-  }
-}
