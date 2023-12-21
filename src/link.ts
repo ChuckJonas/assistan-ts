@@ -20,12 +20,15 @@ export type LinkOptions = {
   allowCreate?: boolean;
   /** What to do if drift is detected.  Default: `update` */
   updateMode?: "update" | "throw" | "skip";
+  /** Run after creating assistant */
   afterCreate?: (assistant: Assistant) => void;
+  /** Runs before updating an assistant. Return false to skip update */
   beforeUpdate?: (
     diff: string[],
     local: AssistantCreateParams,
     remote: Assistant
   ) => boolean;
+  /** Runs after updating an assistant */
   afterUpdate?: (assistant: Assistant) => void;
 };
 

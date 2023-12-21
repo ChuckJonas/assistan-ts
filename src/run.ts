@@ -4,12 +4,13 @@ import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/ru
 import { FunctionTool } from "./definition";
 
 export interface RunOptions {
-  /** How long to wait between polling for run completion */
+  /** ms wait between polling for run completion. Default 1000 */
   interval?: number;
+
   /** Abort controller to abort the run */
   abortSignal?: AbortSignal;
 
-  // TODO: callback
+  // executes anytime the status changes (within the execution of this function)
   onStatusChange?: (run: Run, previous: Run["status"]) => void;
 }
 

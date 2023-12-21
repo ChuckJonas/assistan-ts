@@ -9,6 +9,8 @@ A lightweight framework for building and running code first, type-safe assistant
 
 This library aims to make it easy to create & run assistants, without introducing heavy abstractions or departing too far from the official `openai` library. 
 
+[Demo Video (1min)](https://youtu.be/1CNvlqAxoMM)
+
 **Key Features:**
 
 - Define Assistants using [`typebox`](https://github.com/sinclairzx81/typebox) schemas
@@ -152,22 +154,33 @@ while (toolActions) {
 
 ### Link Options
 
-| Property | Type | Description  |
-|----------|:-------------:|------|
-| assistantId | string (optional) | Pass a OpenAI id to retrieve by id instead of `metadata-->__key__` search |
-| allowCreate | boolean (optional) | Will create assistant if not found. Default: `true` |
-| updateMode | "update" or "throw" or "skip" (optional) | What to do if drift is detected. Default: `update` |
+| Property | Type | Description | Default Value |
+| --- | --- | --- | --- |
+| assistantId | string | Pass a OpenAI id to retrieve by id instead of `metadata-->__key__` search | - |
+| allowCreate | boolean | Will create assistant if not found | true |
+| updateMode | "update" \| "throw" \| "skip" | What to do if drift is detected | "update" |
+| afterCreate | (assistant: Assistant) => void | Run after creating assistant | - |
+| beforeUpdate | (diff: string[], local: AssistantCreateParams, remote: Assistant) => boolean | Runs before updating an assistant. Return false to skip update | - |
+| afterUpdate | (assistant: Assistant) => void | Runs after updating an assistant | - |
 
 #### Tool Options
 
-| Property | Type | Description  |
-|----------|:-------------:|------|
-| validateArguments | boolean | Run JSONSchema validation before calling tool. default: `true` |
-| jsonParser | (args: string, ctx: ToolContext) => unknown | Parse tool call arguments |
-| validator | (args: unknown, ctx: ToolContext) => void | Validates parsed arguments |
-| formatToolError | (error: unknown, ctx: ToolContext) => string | Formats and remap tool execution errors |
-| formatValidationError | (errors: ErrorObject<string, Record<string, any>, unknown>[], ctx: ToolContext) => string | Formats validation error messages |
-| formatOutput | (output: Output, ctx: ToolContext) => string | Formats the output of the tool's operation |
+| Property | Type | Description | Default Value |
+| --- | --- | --- | --- |
+| validateArguments | boolean | Run JSONSchema validation before calling tool | true |
+| jsonParser | (args: string, ctx: ToolContext) => unknown | Argument Parser | - |
+| validator | (args: unknown, ctx: ToolContext) => void | Argument Validator | - |
+| formatToolError | (error: unknown, ctx: ToolContext) => string | Chance to remap errors or throw a fatal 'fatal'.  By Default only `AssistantVisibleError` will be passed along | - |
+| formatValidationError | (errors: ErrorObject<string, Record<string, any>, unknown>[], ctx: ToolContext) => string | Custom error messages on argument validation | - |
+| formatOutput | (output: Output, ctx: ToolContext) => string | Output Formatter | - |
+
+#### Run Options
+
+| Property | Type | Description | Default Value |
+| --- | --- | --- | --- |
+| interval | number | MS wait between polling for run completion | 1000 |
+| abortSignal | AbortSignal | Abort controller to abort the run | - |
+| onStatusChange | (run: Run, previous: Run["status"]) => void | Executes anytime the status changes (within the execution of this function) | - |
 
 ## Running Examples
 
