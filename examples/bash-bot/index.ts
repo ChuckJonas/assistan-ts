@@ -88,10 +88,10 @@ let cli: AgentCLI;
   });
 
   cli = new AgentCLI(scheduleBot, {
-    intro: "Be careful...",
+    intro: "hope you know what you're doing :)",
     confirmToolRuns: true,
     threadId: process.argv[2], // pass threadID in to pickup on an old thread
-    outputPath: "./assets",
+    outputPath: "./",
   });
 
   await cli.start();

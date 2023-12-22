@@ -168,7 +168,7 @@ export class AgentCLI {
         COLORS.actionRequest(`Agent Requesting to Run: `),
         `${colors.bold(toolCall.function.name)}(${
           toolCall.function.arguments.cyan
-        }`
+        })`
       );
 
       // confirmToolRuns === false || action not in list
