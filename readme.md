@@ -110,7 +110,7 @@ For any tools you defined, you must provide an implementation with a matching si
   });
 ```
 
-## Create a thread and run
+### Create a thread and run
 
 ```typescript
 const thread = await openai.beta.threads.create({
@@ -150,6 +150,32 @@ while (toolActions) {
 }
 ```
 
+## Running Examples
+
+<img width="859" alt="repro_ts_—_assistan-ts" src="https://github.com/ChuckJonas/assistan-ts/assets/5217568/6060cf0b-7dff-4bcb-9b07-3f032301f5c9">
+
+*`pg-bot` connected to coffee roasting db*
+
+This project contains a number of [`examples`](/examples) to demonstrate the use of the library.
+
+- `schedulo-bot-3000`: simple demo, not actually connected to anything
+- `bash-bot`: Agent with full control to execute in your terminal and upload files to for the code interpreter
+- `pg-bot`: Agent connected to a postgres database. Can explore schema and execute queries.
+
+To run an example:
+
+1. `cd examples`
+1. `npm i`
+1. Set the `OAI_KEY` environment variable to your OpenAI API key (`export OAI_KEY=<your key>`)
+1. use `bun` to run the index file:
+
+```bash
+npx bun <example name>/index.ts
+```
+
+> [!NOTE]
+> Checkout the [agentCli.ts](/examples/_lib/agentCLI.ts) to see a simple demo of how to manage the agent lifecycle. 
+
 ## Configuration
 
 ### Link Options
@@ -182,24 +208,6 @@ while (toolActions) {
 | abortSignal | AbortSignal | Abort controller to abort the run | - |
 | onStatusChange | (run: Run, previous: Run["status"]) => void | Executes anytime the status changes (within the execution of this function) | - |
 
-## Running Examples
 
-<img width="933" alt="Cursor_and_agentCLI_ts_—_assistan-ts__Codespaces__cuddly_disco__—_Visual_Studio_Code" src="https://github.com/ChuckJonas/assistan-ts/assets/5217568/b547c1dc-7725-492c-b98a-c9e37a5e8b79">
-
-This project contains a number of examples to demonstrate the use of the library. The examples are located in the `examples` directory.
-
-To run an example, use the following command:
-
-1. `cd examples`
-1. `npm i`
-1. Set the `OAI_KEY` environment variable to your OpenAI API key (`export OAI_KEY=<your key>`)
-1. use `bun` to run the index file:
-
-```bash
-npx bun <example name>/index.ts
-```
-
-> [!NOTE]
-> Checkout the [agentCli.ts](/examples/_lib/agentCLI.ts) to see a simple demo of how to manage the agent lifecycle. 
 
 
