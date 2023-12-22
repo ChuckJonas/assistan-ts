@@ -36,7 +36,7 @@ type SetupRunResponse = {
 type Props<T extends Record<string, FunctionTool>> = {
   definition: LinkedDefinition<T>;
   tools: ToolsDefsToToolbox<T>;
-  toolOptions?: ToolOptions;
+  toolOptions?: Partial<ToolOptions>;
 };
 
 export const assistant = <T extends Record<string, FunctionTool>>({
@@ -44,7 +44,7 @@ export const assistant = <T extends Record<string, FunctionTool>>({
   tools,
   toolOptions,
 }: Props<T>): Assistant<T> => {
-  const toolbox = initToolBox(definition, tools, toolOptions);
+  const toolbox = initToolBox(definition.functionTools!, tools, toolOptions);
 
   const setupRun = (run: Run): SetupRunResponse => ({
     run,

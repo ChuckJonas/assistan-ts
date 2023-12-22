@@ -5,7 +5,7 @@
 
 `npm i assistan-ts`
 
-A lightweight framework for building and running code first, type-safe assistants.  
+A lightweight framework for building and running code first, type-safe "Agents".  
 
 This library aims to make it easy to create & run assistants, without introducing heavy abstractions or departing too far from the official `openai` library. 
 
@@ -14,7 +14,7 @@ This library aims to make it easy to create & run assistants, without introducin
 **Key Features:**
 
 - Define Assistants using [`typebox`](https://github.com/sinclairzx81/typebox) schemas
-- sync changes with OpenAI
+- Sync changes with OpenAI
 - Parse & validate arguments to tool calls
 - Automatically poll `runs` for completion
 

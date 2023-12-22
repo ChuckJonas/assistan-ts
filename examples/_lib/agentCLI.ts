@@ -1,6 +1,8 @@
 /**
  * Agent CLI
  * Quick and dirty agent runner for demo'ing `assistan-ts`
+ * TODO:
+ * - [ ] control over "confirm" character {match: "", "label":""}
  */
 import { Assistant, ToolsRequired } from "assistan-ts";
 import colors from "colors";
@@ -24,6 +26,14 @@ export type AgentCLIOptions = {
   write: (...msgs: string[]) => void;
   /** Pass false to run all actions without confirmation. Or pass an string[] of action keys to halt on.  Defaults to true */
   confirmToolRuns?: boolean | string[];
+
+  /** passed whenever a new run is started */
+  createRunParams?: Omit<
+    OpenAI.Beta.Threads.Runs.RunCreateParams,
+    "assistant_id"
+  >;
+
+  /** Use to restore existing thread */
   threadId?: string;
   // path to write generated files and images to
   outputPath?: string;
@@ -90,23 +100,19 @@ export class AgentCLI {
         role: "user",
         content: userChat,
       });
-      let { run, toolsRequired, complete } = await this.assistant.run.create({
+      let { toolsRequired } = await this.assistant.run.create({
         threadId: this.thread.id,
+        body: this.options.createRunParams ?? {},
       });
 
-      if (this.options.confirmToolRuns === false) {
-        await complete();
-      } else {
-        let toolsRequest: ToolsRequired | null;
-        ({ run, toolsRequest } = await toolsRequired());
-        while (toolsRequest) {
-          const responses = await this.confirmTools(toolsRequest);
+      let { toolsRequest } = await toolsRequired();
+      while (toolsRequest) {
+        const responses = await this.confirmTools(toolsRequest);
 
-          if (!responses) {
-            return;
-          }
-          ({ run, toolsRequest } = await toolsRequest.execute(responses));
+        if (!responses) {
+          return;
         }
+        ({ toolsRequest } = await toolsRequest.execute(responses));
       }
 
       const messages = await this.openai.beta.threads.messages.list(

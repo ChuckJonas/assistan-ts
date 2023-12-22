@@ -5,7 +5,7 @@ import {
   FunctionTool,
 } from "./definition";
 import { Assistant, AssistantCreateParams, OpenAI } from "./types/openai";
-import { diff } from "deep-diff";
+import { Value } from "@sinclair/typebox/value";
 
 export interface LinkedDefinition<T extends Record<string, FunctionTool>>
   extends AssistantDefinition<T> {
@@ -119,7 +119,5 @@ const compareTools = (
 ) => {
   remote?.sort();
   local?.sort();
-  const differences = diff(remote, local);
-
-  return (differences?.length ?? 0) === 0;
+  return Value.Hash(remote) === Value.Hash(local);
 };

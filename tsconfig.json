@@ -8,8 +8,8 @@
     "outDir": "./dist",
     "sourceMap": true,
     "declaration": true,
-    "declarationMap": true,
-    "types": ["bun-types"]
+    "declarationMap": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/__tests__", "**/*.spec.ts"]
 }

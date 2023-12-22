@@ -11,6 +11,11 @@
   "dependencies": {
     "assistan-ts": "*",
     "colors": "^1.4.0",
-    "openai": "^4.24.0"
+    "dotenv": "^16.3.1",
+    "openai": "^4.24.0",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.9"
   }
 }

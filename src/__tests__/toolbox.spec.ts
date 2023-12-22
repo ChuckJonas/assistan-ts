@@ -1,42 +1,51 @@
+import assert from "assert";
 import { expect, test } from "bun:test";
-import { definition } from "../definition";
+import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
 import { Type } from "..";
 import { AssistantVisibleError, initToolBox } from "../toolbox";
-import assert from "assert";
-import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
 
-const adderDef = definition({
-  key: "adder",
-  model: "gpt-4",
-  name: "adder",
-  instructions: "Answer questions about the weather",
-  functionTools: {
-    sum: {
-      parameters: Type.Object({
-        a: Type.Number(),
-        b: Type.Number(Type.Number()),
-      }),
-    },
+const sumDef = {
+  sum: {
+    parameters: Type.Object({
+      a: Type.Number(),
+      b: Type.Number(Type.Number()),
+    }),
   },
-});
+};
 
-function sumToolCall(args: string): RequiredActionFunctionToolCall {
+const noopDef = {
+  noop: {
+    parameters: Type.Null(),
+  },
+};
+
+const dateDef = {
+  dateFn: {
+    parameters: Type.Object({
+      d: Type.String({
+        format: "date",
+      }),
+    }),
+  },
+};
+
+function toolCall(tool: string, args: string): RequiredActionFunctionToolCall {
   return {
     id: "123",
     type: "function",
     function: {
       arguments: args,
-      name: "sum",
+      name: tool,
     },
   };
 }
 
+const sumToolCall = (args: string) => toolCall("sum", args);
+
 const onePlusTwo = sumToolCall(`{"a": 1, "b": 2}`);
 
-/* happy :) */
-
 test("valid", async () => {
-  const toolbox = initToolBox(adderDef, {
+  const toolbox = initToolBox(sumDef, {
     sum: async ({ a, b }) => {
       return a + b;
     },
@@ -46,23 +55,32 @@ test("valid", async () => {
   expect(result.output).toBe("3");
 });
 
+test("no parameters", async () => {
+  const toolbox = initToolBox(noopDef, {
+    noop: async () => {
+      return "success";
+    },
+  });
+
+  const result = await toolbox.handleAction(toolCall("noop", "{}"));
+  expect(result.output).toBe("success");
+});
+
 /* error handling */
 
 test("missing args", async () => {
-  const toolbox = initToolBox(adderDef, {
+  const toolbox = initToolBox(sumDef, {
     sum: async ({ a, b }) => {
       return a + b;
     },
   });
 
   const output = await toolbox.handleAction(sumToolCall(`{"a": 2}`));
-  expect(output.output).toBe(
-    "Error calling sum: arguments must have required property 'b'"
-  );
+  expect(output.output).toContain("arguments/b");
 });
 
 test("invalid arg type", async () => {
-  const toolbox = initToolBox(adderDef, {
+  const toolbox = initToolBox(sumDef, {
     sum: async ({ a, b }) => {
       return a + b;
     },
@@ -74,8 +92,34 @@ test("invalid arg type", async () => {
   expect(output.output).toContain("arguments/b");
 });
 
+test("valid format type", async () => {
+  const toolbox = initToolBox(dateDef, {
+    dateFn: async ({ d }) => {
+      return "success";
+    },
+  });
+
+  const output = await toolbox.handleAction(
+    toolCall("dateFn", `{"d": "2022-03-14"}`)
+  );
+  expect(output.output).toBe("success");
+});
+
+test("invalid format type", async () => {
+  const toolbox = initToolBox(dateDef, {
+    dateFn: async ({ d }) => {
+      return d;
+    },
+  });
+
+  const output = await toolbox.handleAction(
+    toolCall("dateFn", `{"d": "22/03/14"}`)
+  );
+  expect(output.output).toContain("arguments/d");
+});
+
 test("tool throws fatal error", async () => {
-  const toolbox = initToolBox(adderDef, {
+  const toolbox = initToolBox(sumDef, {
     sum: async ({ a, b }) => {
       throw new Error("foo");
     },
@@ -90,7 +134,7 @@ test("tool throws fatal error", async () => {
 });
 
 test("tool throws visible error", async () => {
-  const toolbox = initToolBox(adderDef, {
+  const toolbox = initToolBox(sumDef, {
     sum: async ({ a, b }) => {
       throw new AssistantVisibleError("foo");
     },
@@ -104,7 +148,7 @@ test("tool throws visible error", async () => {
 
 test("override formatOutput", async () => {
   const toolbox = initToolBox(
-    adderDef,
+    sumDef,
     {
       sum: async ({ a, b }) => a + b,
     },
@@ -121,7 +165,7 @@ test("override formatOutput", async () => {
 
 test("override formatToolError", async () => {
   const toolbox = initToolBox(
-    adderDef,
+    sumDef,
     {
       sum: async ({ a, b }) => {
         throw new Error("foo");

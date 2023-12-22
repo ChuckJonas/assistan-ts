@@ -1,9 +1,13 @@
-import { Type, Static, TSchema } from "@sinclair/typebox";
-import { AssistantDefinition, FunctionTool, definition } from "./definition";
-import addFormats from "ajv-formats";
-import Ajv, { ErrorObject } from "ajv";
+import { Static } from "@sinclair/typebox";
+import { AssistantDefinition, FunctionTool } from "./definition";
+
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
 import { ToolOutput } from "./types/openai";
+import { Value, ValueError } from "@sinclair/typebox/value";
+import { registerTypeboxFormats } from "./lib/formats";
+import { isNullType } from "./lib/typebox";
+
+registerTypeboxFormats();
 
 type Output = string | number | boolean | object;
 
@@ -31,10 +35,7 @@ export type ToolOptions = {
   formatToolError: (error: unknown, ctx: ToolContext) => string;
 
   /* custom error messages on argument validation */
-  formatValidationError: (
-    errors: ErrorObject<string, Record<string, any>, unknown>[],
-    ctx: ToolContext
-  ) => string;
+  formatValidationError: (errors: ValueError[], ctx: ToolContext) => string;
 
   /* Output Formatter */
   formatOutput: (output: Output, ctx: ToolContext) => string;
@@ -50,31 +51,38 @@ export const defaultOptions: ToolOptions = {
 };
 
 export type ToolBox<T extends Record<string, FunctionTool>> = {
+  toolDefs: T;
   toolsFn: ToolsDefsToToolbox<T>;
   options: ToolOptions;
   handleAction: (action: RequiredActionFunctionToolCall) => Promise<ToolOutput>;
 };
 
 export const initToolBox = <T extends Record<string, FunctionTool>>(
-  definition: AssistantDefinition<T>,
+  toolDefs: T,
   toolsFn: ToolsDefsToToolbox<T>,
   options: Partial<ToolOptions> = defaultOptions
 ): ToolBox<T> => {
   const opts = { ...defaultOptions, ...options };
   const { jsonParser, validator, formatOutput, formatToolError } = opts;
   return {
+    toolDefs,
     toolsFn,
     options: opts,
     handleAction: async (
       action: RequiredActionFunctionToolCall
     ): Promise<ToolOutput> => {
-      const toolDef = definition.functionTools?.[action.function.name];
+      const toolDef = toolDefs?.[action.function.name];
 
       const ctx: ToolContext = { action, options: opts, toolDef };
-
       try {
+        if (!toolDef)
+          throw new AssistantVisibleError(
+            `Tool key not found: ${
+              action.function.name
+            }. Please select from ${Object.keys(toolDefs as any).toString()}`
+          );
         let output: Output;
-        if (!toolDef?.parameters) {
+        if (!toolDef?.parameters || isNullType(toolDef.parameters)) {
           output = await toolsFn[action.function.name](undefined);
         } else {
           const args = jsonParser(action.function.arguments, ctx);
@@ -96,23 +104,6 @@ export const initToolBox = <T extends Record<string, FunctionTool>>(
   };
 };
 
-const ajv = addFormats(new Ajv({ allErrors: true }), [
-  "date-time",
-  "time",
-  "date",
-  "email",
-  "hostname",
-  "ipv4",
-  "ipv6",
-  "uri",
-  "uri-reference",
-  "uuid",
-  "uri-template",
-  "json-pointer",
-  "relative-json-pointer",
-  "regex",
-]);
-
 function defaultJsonParser(args: string, ctx: ToolContext) {
   try {
     return JSON.parse(args);
@@ -123,18 +114,19 @@ function defaultJsonParser(args: string, ctx: ToolContext) {
 
 function defaultValidator(args: unknown, ctx: ToolContext) {
   if (ctx.options.validateArguments && ctx.toolDef) {
-    const validate = ajv.compile(ctx.toolDef.parameters);
-    const valid = validate(args);
+    // const validate = ajv.compile(ctx.toolDef.parameters);
+    const errors = [...Value.Errors(ctx.toolDef.parameters, args)];
+    const valid = errors.length === 0;
     if (valid === false) {
       throw new AssistantVisibleError(
-        ctx.options.formatValidationError(validate.errors ?? [], ctx)
+        ctx.options.formatValidationError(errors ?? [], ctx)
       );
     }
   }
 }
 
-function defaultValidateFormatter(errors: ErrorObject[]) {
-  return ajv.errorsText(errors, { dataVar: "arguments" });
+function defaultValidateFormatter(errors: ValueError[]) {
+  return errors.map((it) => `arguments${it.path} ${it.message}`).join("\n");
 }
 
 function defaultOutputFormatter(output: Output) {

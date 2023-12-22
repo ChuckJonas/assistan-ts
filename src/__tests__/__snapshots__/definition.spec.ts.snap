@@ -1,0 +1,50 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`translates to OpenAI schema 1`] = `
+"{
+  "model": "gpt-4",
+  "name": "adder",
+  "instructions": "You are a calculator",
+  "file_ids": [],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "sum",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "noop",
+        "parameters": null
+      }
+    },
+    {
+      "type": "code_interpreter"
+    },
+    {
+      "type": "retrieval"
+    }
+  ],
+  "metadata": {
+    "__key__": "adder",
+    "foo": "value"
+  }
+}"
+`;

@@ -6,6 +6,7 @@ import {
   AssistantFunction,
   OpenAI,
 } from "./types/openai";
+import { isNullType } from "./lib/typebox";
 
 export const METADATA_KEY = "__key__";
 
@@ -49,21 +50,7 @@ export const toPayload = (
     ...rest
   } = assistant;
 
-  const functions = Object.keys(functionTools).map<AssistantFunction>(
-    (toolKey) => {
-      // TODO: fix hack to deal with undefined type complexity.
-      if (
-        functionTools[toolKey].parameters[Kind] == Type.Void()[Kind] ||
-        functionTools[toolKey].parameters[Kind] == Type.Undefined()[Kind]
-      ) {
-        functionTools[toolKey]["parameters"] = null;
-      }
-      return {
-        type: "function",
-        function: { name: toolKey, ...functionTools[toolKey] },
-      };
-    }
-  );
+  const functions = functionsToPayload(functionTools);
 
   const tools: AssistantCreateParams["tools"] = [
     ...functions,
@@ -81,6 +68,25 @@ export const toPayload = (
     tools,
     metadata,
   };
+};
+
+export const functionsToPayload = (
+  functionTools: Record<string, FunctionTool>
+): AssistantFunction[] => {
+  const functions = Object.keys(functionTools).map<AssistantFunction>(
+    (toolKey) => {
+      // TODO: fix hack to deal with undefined type complexity.
+      if (isNullType(functionTools[toolKey].parameters)) {
+        functionTools[toolKey]["parameters"] = null as any;
+      }
+      return {
+        type: "function",
+        function: { name: toolKey, ...functionTools[toolKey] },
+      };
+    }
+  );
+
+  return functions;
 };
 
 export type FunctionTool = Omit<
