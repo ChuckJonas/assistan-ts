@@ -7,6 +7,7 @@ import {
   OpenAI,
 } from "./types/openai";
 import { isNullType } from "./lib/typebox";
+import { FunctionDefinition } from "openai/resources";
 
 export const METADATA_KEY = "__key__";
 
@@ -50,7 +51,7 @@ export const toPayload = (
     ...rest
   } = assistant;
 
-  const tools = functionsToPayload(assistant);
+  const tools = toolsToPayload(assistant);
 
   const metadata = {
     [METADATA_KEY]: assistant.key,
@@ -64,26 +65,14 @@ export const toPayload = (
   };
 };
 
-export const functionsToPayload = (
+export const toolsToPayload = (
   def: Pick<
     AssistantDefinition<any>,
     "functionTools" | "codeInterpreter" | "retrieval"
   >
 ): AssistantCreateParams["tools"] => {
   const { functionTools, codeInterpreter = false, retrieval = false } = def;
-  const functions = Object.keys(functionTools).map<AssistantFunction>(
-    (toolKey) => {
-      // TODO: fix hack to deal with undefined type complexity.
-      // (currently mutates def which is problematic)
-      if (isNullType(functionTools[toolKey].parameters)) {
-        functionTools[toolKey]["parameters"] = null as any;
-      }
-      return {
-        type: "function",
-        function: { name: toolKey, ...functionTools[toolKey] },
-      };
-    }
-  );
+  const functions = functionsToPayload(functionTools);
 
   const tools: AssistantCreateParams["tools"] = [
     ...functions,
@@ -99,4 +88,20 @@ export type FunctionTool = Omit<
   "parameters" | "name"
 > & {
   parameters: TSchema;
+};
+
+export const functionsToPayload = <T extends Record<string, FunctionTool>>(
+  functionTools: T
+): AssistantFunction[] => {
+  return Object.keys(functionTools).map((toolKey) => {
+    // TODO: fix hack to deal with undefined type complexity.
+    // (currently mutates def which is problematic)
+    if (isNullType(functionTools[toolKey].parameters)) {
+      functionTools[toolKey]["parameters"] = null as any;
+    }
+    return {
+      type: "function",
+      function: { name: toolKey, ...functionTools[toolKey] },
+    };
+  });
 };

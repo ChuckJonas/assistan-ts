@@ -110,9 +110,9 @@ const client = new Client();
   cli = new AgentCLI(scheduleBot, {
     intro: "You are chatting with pg-bot.  How can I assist you?",
     confirmToolRuns: ["execute_query"],
-    createRunParams: {
+    beforeCreateRun: () => ({
       additional_instructions: `Database Schemas:\n${JSON.stringify(bySchema)}`,
-    },
+    }),
   });
 
   await cli.start();

@@ -28,7 +28,7 @@ export type AgentCLIOptions = {
   confirmToolRuns?: boolean | string[];
 
   /** passed whenever a new run is started */
-  createRunParams?: Omit<
+  beforeCreateRun?: () => Omit<
     OpenAI.Beta.Threads.Runs.RunCreateParams,
     "assistant_id"
   >;
@@ -102,7 +102,9 @@ export class AgentCLI {
       });
       let { toolsRequired } = await this.assistant.run.create({
         threadId: this.thread.id,
-        body: this.options.createRunParams ?? {},
+        body: this.options.beforeCreateRun
+          ? this.options.beforeCreateRun()
+          : {},
       });
 
       let { toolsRequest } = await toolsRequired();

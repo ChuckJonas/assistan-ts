@@ -1,8 +1,8 @@
 import { Static } from "@sinclair/typebox";
-import { FunctionTool } from "./definition";
+import { FunctionTool, functionsToPayload } from "./definition";
 
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
-import { ToolOutput } from "./types/openai";
+import { AssistantFunction, ToolOutput } from "./types/openai";
 import { Value, ValueError } from "@sinclair/typebox/value";
 import { registerTypeboxFormats } from "./lib/formats";
 import { isNullType } from "./lib/typebox";
@@ -54,7 +54,10 @@ export type ToolBox<T extends Record<string, FunctionTool>> = {
   toolDefs: T;
   toolsFn: ToolsDefsToToolbox<T>;
   options: ToolOptions;
-  handleAction: (action: RequiredActionFunctionToolCall) => Promise<ToolOutput>;
+  handleAction: (
+    action: RequiredActionFunctionToolCall
+  ) => Promise<Required<ToolOutput>>;
+  payload: AssistantFunction[];
 };
 
 // TODO: how to handle options and tool conflicts?
@@ -88,9 +91,8 @@ export const toolbox = <T extends Record<string, FunctionTool>>(
     toolDefs,
     toolsFn,
     options: opts,
-    handleAction: async (
-      action: RequiredActionFunctionToolCall
-    ): Promise<ToolOutput> => {
+    payload: functionsToPayload(toolDefs),
+    handleAction: async (action) => {
       const toolDef = toolDefs?.[action.function.name];
 
       const ctx: ToolContext = { action, options: opts, toolDef };
