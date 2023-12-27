@@ -10,7 +10,7 @@ import {
   ToolBox,
   ToolOptions,
   ToolsDefsToToolbox,
-  toolbox as initToolbox,
+  toolbox as initToolBox,
 } from "./toolbox";
 import { Run, RunCreateParams, OpenAI } from "./types/openai";
 
