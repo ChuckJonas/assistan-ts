@@ -1,4 +1,4 @@
-import { ToolBox, initToolBox } from "./toolbox";
+import { ToolBox, toolbox } from "./toolbox";
 import { Run, ToolOutput, OpenAI } from "./types/openai";
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
 import { FunctionTool } from "./definition";
@@ -78,7 +78,7 @@ export const waitForRequiredAction = async <
 async function runAndSubmitTools(
   run: Run,
   params: {
-    toolbox: ReturnType<typeof initToolBox>;
+    toolbox: ReturnType<typeof toolbox>;
     openai: OpenAI;
     abortSignal?: AbortSignal;
     onStatusChange?: (run: Run, previous: Run["status"]) => void;
@@ -92,15 +92,15 @@ async function runAndSubmitTools(
 
   const overrides: ToolOutput[] =
     toolCalls
-      .filter((it) => responseOverrides[it.function.name] !== undefined)
+      .filter((it) => responseOverrides[it.id] !== undefined)
       .map((it) => ({
         tool_call_id: it.id,
-        output: responseOverrides[it.function.name],
+        output: responseOverrides[it.id],
       })) ?? [];
 
   const toolPromises =
     toolCalls
-      .filter((it) => responseOverrides[it.function.name] === undefined)
+      .filter((it) => responseOverrides[it.id] === undefined)
       .map((toolCall) =>
         toolbox.handleAction(toolCall).catch((e) => e as Error)
       ) ?? [];

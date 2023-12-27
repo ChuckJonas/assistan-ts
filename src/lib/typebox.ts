@@ -6,6 +6,6 @@ const NULL_TYPES_KINDS: string[] = [
   Type.Null()[Kind],
 ];
 
-export const isNullType = (obj: TSchema): boolean => {
-  return NULL_TYPES_KINDS.includes(obj[Kind]);
+export const isNullType = (obj?: TSchema): boolean => {
+  return obj == null || NULL_TYPES_KINDS.includes(obj[Kind]);
 };

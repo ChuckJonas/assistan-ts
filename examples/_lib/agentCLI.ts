@@ -188,10 +188,10 @@ export class AgentCLI {
         continue;
       } else if (answer == "n") {
         this.options.write("Canceling Action".red);
-        overrides[toolCall.function.name] =
+        overrides[toolCall.id] =
           "ACTION CANCELED: User has denied execution of this action";
       } else {
-        overrides[toolCall.function.name] = answer;
+        overrides[toolCall.id] = answer;
       }
     }
     return overrides;

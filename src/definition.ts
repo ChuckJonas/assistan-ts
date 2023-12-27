@@ -50,13 +50,7 @@ export const toPayload = (
     ...rest
   } = assistant;
 
-  const functions = functionsToPayload(functionTools);
-
-  const tools: AssistantCreateParams["tools"] = [
-    ...functions,
-    ...(codeInterpreter ? [{ type: "code_interpreter" } as const] : []),
-    ...(retrieval ? [{ type: "retrieval" } as const] : []),
-  ];
+  const tools = functionsToPayload(assistant);
 
   const metadata = {
     [METADATA_KEY]: assistant.key,
@@ -71,11 +65,16 @@ export const toPayload = (
 };
 
 export const functionsToPayload = (
-  functionTools: Record<string, FunctionTool>
-): AssistantFunction[] => {
+  def: Pick<
+    AssistantDefinition<any>,
+    "functionTools" | "codeInterpreter" | "retrieval"
+  >
+): AssistantCreateParams["tools"] => {
+  const { functionTools, codeInterpreter = false, retrieval = false } = def;
   const functions = Object.keys(functionTools).map<AssistantFunction>(
     (toolKey) => {
       // TODO: fix hack to deal with undefined type complexity.
+      // (currently mutates def which is problematic)
       if (isNullType(functionTools[toolKey].parameters)) {
         functionTools[toolKey]["parameters"] = null as any;
       }
@@ -86,7 +85,13 @@ export const functionsToPayload = (
     }
   );
 
-  return functions;
+  const tools: AssistantCreateParams["tools"] = [
+    ...functions,
+    ...(codeInterpreter ? [{ type: "code_interpreter" } as const] : []),
+    ...(retrieval ? [{ type: "retrieval" } as const] : []),
+  ];
+
+  return tools;
 };
 
 export type FunctionTool = Omit<

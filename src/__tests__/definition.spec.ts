@@ -48,3 +48,29 @@ test("translates to OpenAI schema", async () => {
   expect((oaiDef.metadata as any)["foo"]).toBe("value");
   expect(JSON.stringify(oaiDef, null, 2)).toMatchSnapshot();
 });
+
+test("without other tools", async () => {
+  const adderDef = definition({
+    key: "adder",
+    model: "gpt-4",
+    name: "adder",
+    instructions: "You are a calculator",
+    codeInterpreter: false,
+    retrieval: false,
+    functionTools: {
+      sum: {
+        parameters: Type.Object({
+          a: Type.Number(),
+          b: Type.Number(Type.Number()),
+        }),
+      },
+      noop: {
+        parameters: Type.Null(),
+      },
+    },
+  });
+
+  const oaiDef = toPayload(adderDef);
+  expect(oaiDef.tools?.length).toBe(2);
+  expect(JSON.stringify(oaiDef, null, 2)).toMatchSnapshot();
+});

@@ -1,5 +1,5 @@
 import { Static } from "@sinclair/typebox";
-import { AssistantDefinition, FunctionTool } from "./definition";
+import { FunctionTool } from "./definition";
 
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
 import { ToolOutput } from "./types/openai";
@@ -57,7 +57,27 @@ export type ToolBox<T extends Record<string, FunctionTool>> = {
   handleAction: (action: RequiredActionFunctionToolCall) => Promise<ToolOutput>;
 };
 
-export const initToolBox = <T extends Record<string, FunctionTool>>(
+// TODO: how to handle options and tool conflicts?
+export const join = (...toolboxes: ToolBox<any>[]): ToolBox<any> => {
+  const toolDefs = Object.assign({}, ...toolboxes.map((it) => it.toolDefs));
+  const toolsFn = Object.assign({}, ...toolboxes.map((it) => it.toolsFn));
+  return toolbox(toolDefs, toolsFn, toolboxes[0]?.options);
+};
+
+export const filter = <T extends Record<string, FunctionTool>>(
+  tb: ToolBox<T>,
+  filter: (key: string, tool: FunctionTool) => boolean
+): ToolBox<any> => {
+  const toolDefs = Object.fromEntries(
+    Object.entries(tb.toolDefs).filter(([key, tool]) => filter(key, tool))
+  );
+  const toolsFn = Object.fromEntries(
+    Object.entries(tb.toolsFn).filter(([key, tool]) => filter(key, tool))
+  );
+  return toolbox(toolDefs, toolsFn, tb.options);
+};
+
+export const toolbox = <T extends Record<string, FunctionTool>>(
   toolDefs: T,
   toolsFn: ToolsDefsToToolbox<T>,
   options: Partial<ToolOptions> = defaultOptions

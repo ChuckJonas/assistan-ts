@@ -4,10 +4,11 @@ import {
   assistant,
   definition,
 } from "assistan-ts";
-import { exec } from "child_process";
+
 import fs from "fs";
 import OpenAI from "openai";
 import { AgentCLI } from "../_lib/agentCLI";
+import { exec__unsafe } from "../_lib/exec";
 
 const openai = new OpenAI({
   apiKey: process.env["OAI_KEY"],
@@ -62,7 +63,7 @@ let cli: AgentCLI;
       run_bash_command: async ({ cmd }) => {
         // spawn a process and wait for it to finish
         try {
-          const result = await executeCommand(cmd);
+          const result = await exec__unsafe(cmd);
           return {
             output: result,
           };
@@ -99,19 +100,3 @@ let cli: AgentCLI;
   .then(console.log)
   .catch(console.error)
   .finally(() => cli?.close());
-
-function executeCommand(cmd: string) {
-  return new Promise((resolve, reject) => {
-    exec(cmd, { env: process.env, shell: "bash" }, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-      }
-
-      if (stderr) {
-        reject(new Error(stderr));
-      }
-
-      resolve(stdout);
-    });
-  });
-}
