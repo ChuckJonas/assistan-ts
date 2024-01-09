@@ -29,7 +29,6 @@ test("create w/ complete run", async () => {
       },
     },
     metadata: { foo: "value" },
-    file_ids: [],
   });
 
   const linked = await adderDef.link(openai, {});
@@ -84,7 +83,6 @@ test("create w/ require action", async () => {
       },
     },
     metadata: { foo: "value" },
-    file_ids: [],
   });
 
   const linked = await adderDef.link(openai, {});

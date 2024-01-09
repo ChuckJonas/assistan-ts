@@ -40,7 +40,9 @@ test("translates to OpenAI schema", async () => {
       },
     },
     metadata: { foo: "value" },
-    file_ids: [],
+    files: {
+      file_ids: ["123"],
+    },
   });
 
   const oaiDef = toPayload(adderDef);

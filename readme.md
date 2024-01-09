@@ -64,6 +64,28 @@ import { Type, definition, assistant } from 'assistan-ts';
 > [!NOTE]
 > Not all `typebox` types are supported by OpenAI at this time
 
+#### Syncing Files
+
+You can sync files by setting the `files.resolve` property of the definition.  This allows you to sync files from the filesystem or a remote location.
+
+```typescript
+import { toFile } from "openai/uploads";
+import { readFile, readdir } from "fs/promises";
+
+const def = definition({
+   //...
+    retrieval: true,
+    files: {
+      resolve: async () => {
+        const fileName = 'time-off-policy.md';
+        const content = await readFile(path.join('docs', fileName));
+        return [ toFile(content, filename) ];
+      },
+    },
+});
+```
+
+Files will be compared for equality using the filename by default, but you can overrides this by setting `files.keyFn`.
 
 ### Link the Assistant to OpenAI
 
@@ -126,8 +148,7 @@ const { run, complete } = await scheduleBot.run.create({
   threadId: thread.id,
 });
 
-const abortCtrl = new AbortController();
-await complete({ interval: 1000, abortCtrl });
+await complete({ interval: 1500 });
 
 const messages = await openai.beta.threads.messages.list(thread.id);
 ```
@@ -184,10 +205,12 @@ npx bun <example name>/index.ts
 | --- | --- | --- | --- |
 | assistantId | string | Pass a OpenAI id to retrieve by id instead of `metadata-->__key__` search | - |
 | allowCreate | boolean | Will create assistant if not found | true |
-| updateMode | "update" \| "throw" \| "skip" | What to do if drift is detected | "update" |
 | afterCreate | (assistant: Assistant) => void | Run after creating assistant | - |
+| updateMode | "update" \| "throw" \| "skip" | What to do if drift is detected | "update" |
 | beforeUpdate | (diff: string[], local: AssistantCreateParams, remote: Assistant) => boolean | Runs before updating an assistant. Return false to skip update | - |
 | afterUpdate | (assistant: Assistant) => void | Runs after updating an assistant | - |
+| fileMode | "update" \| "throw" \| "skip"  | What to do if file drift is detected | "update" |
+| pruneFiles | boolean  | Deletes files from OpenAI when they are removed from the Assistant | false |
 
 #### Tool Options
 

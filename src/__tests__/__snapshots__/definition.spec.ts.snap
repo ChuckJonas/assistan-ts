@@ -5,7 +5,6 @@ exports[`translates to OpenAI schema 1`] = `
   "model": "gpt-4",
   "name": "adder",
   "instructions": "You are a calculator",
-  "file_ids": [],
   "tools": [
     {
       "type": "function",
@@ -45,7 +44,10 @@ exports[`translates to OpenAI schema 1`] = `
   "metadata": {
     "__key__": "adder",
     "foo": "value"
-  }
+  },
+  "file_ids": [
+    "123"
+  ]
 }"
 `;
 

@@ -9,6 +9,8 @@ let _threadMessages: Record<string, OpenAI.Beta.Threads.ThreadMessagesPage> =
   {};
 let _runs: Record<string, OpenAI.Beta.Threads.Runs.Run> = {};
 
+let _files: Record<string, OpenAI.Files.FileObject> = {};
+
 export const reset = () => {
   _assistants = {};
   _threads = {};
@@ -18,9 +20,45 @@ export const reset = () => {
   mocked.beta.assistants.update.mockClear();
   mocked.beta.assistants.retrieve.mockClear();
   mocked.beta.assistants.update.mockClear();
+  mocked.beta.threads.create.mockClear();
+  mocked.beta.threads.messages.list.mockClear();
+  mocked.beta.threads.runs.create.mockClear();
+  mocked.beta.threads.runs.retrieve.mockClear();
+  mocked.beta.threads.runs.update.mockClear();
+  mocked.beta.threads.runs.submitToolOutputs.mockClear();
+  mocked.files.create.mockClear();
+  mocked.files.retrieve.mockClear();
+  mocked.files.del.mockClear();
 };
 
 export const mocked = {
+  files: {
+    create: mock(
+      (params: {
+        purpose: "assistants";
+        file: File;
+      }): Promise<OpenAI.Files.FileObject> => {
+        const newFile: OpenAI.Files.FileObject = {
+          id: generateId(),
+          object: "file",
+          created_at: new Date().getTime(),
+          bytes: params.file.size,
+          status: "uploaded",
+          filename: params.file.name,
+          purpose: params.purpose,
+        };
+        _files[newFile.id] = newFile;
+        return Promise.resolve(newFile);
+      }
+    ),
+    retrieve: mock((file_id: string) => {
+      return Promise.resolve(_files[file_id]);
+    }),
+    del: mock((file_id: string) => {
+      delete _files[file_id];
+      return Promise.resolve();
+    }),
+  },
   beta: {
     assistants: {
       retrieve: mock(
@@ -34,7 +72,7 @@ export const mocked = {
       }),
       create: mock((params: AssistantCreateParams) => {
         const newAssistant: Assistant = {
-          id: new Date().getTime().toString(),
+          id: generateId(),
           object: "assistant",
           created_at: new Date().getTime(),
           description: "",
@@ -59,7 +97,7 @@ export const mocked = {
     threads: {
       create: mock((params: any) => {
         const newThread: OpenAI.Beta.Threads.Thread = {
-          id: "thread_" + new Date().getTime().toString(),
+          id: "thread_" + generateId(),
           object: "thread",
           created_at: new Date().getTime(),
           metadata: {},
@@ -95,7 +133,7 @@ export const mocked = {
             const newRun: OpenAI.Beta.Threads.Runs.Run = {
               model: model ?? "gpt-4",
               tools: tools ?? [],
-              id: "run_" + new Date().getTime().toString(),
+              id: "run_" + generateId(),
               started_at: Date.now(),
               status: "queued",
               instructions: instructions ?? "",
@@ -177,7 +215,7 @@ export const simulate = (runId: string) => {
 
         run.completed_at = Date.now();
         const message: OpenAI.Beta.Threads.ThreadMessage = {
-          id: new Date().getTime().toString(),
+          id: generateId(),
           run_id: run.id,
           thread_id: run.thread_id,
           object: "thread.message",
@@ -217,3 +255,11 @@ export const simulate = (runId: string) => {
     },
   };
 };
+
+function generateId(): string {
+  const now = Date.now(); // Current timestamp in milliseconds
+  const randomDigits = Array.from({ length: 10 }, () =>
+    Math.floor(Math.random() * 10)
+  ).join("");
+  return `${now}${randomDigits}`;
+}

@@ -8,6 +8,9 @@ import {
 import employee_dir from "./employee-dir.json";
 import employee_av from "./employee-av.json";
 import { AgentCLI } from "../_lib/agentCLI";
+import { toFile } from "openai/uploads";
+import { readFile, readdir } from "fs/promises";
+import { join } from "path";
 
 const openai = new OpenAI({
   apiKey: process.env["OAI_KEY"],
@@ -18,7 +21,7 @@ let cli: AgentCLI;
 (async () => {
   const def = definition({
     key: "Schedul-O-Bot-3000", // 'unique' key added to metadata for linking
-    model: "gpt-4",
+    model: "gpt-4-1106-preview",
     name: "Schedul-O-Bot-3000",
     instructions: "You help schedule meetings for E-Corp.",
     codeInterpreter: true,
@@ -53,6 +56,22 @@ let cli: AgentCLI;
             maximum: 60 * 3,
           }),
         }),
+      },
+    },
+    retrieval: true,
+    files: {
+      // get all Files for current directory
+      resolve: async () => {
+        const docsDir = join(__dirname, "docs");
+        // Read the directory for .md files
+        const files = await readdir(docsDir);
+        const mdFiles = files.filter((file) => file.endsWith(".md"));
+        return Promise.all(
+          mdFiles.map(async (filename) => {
+            const content = await readFile(join(docsDir, filename));
+            return toFile(content, filename);
+          })
+        );
       },
     },
   });
