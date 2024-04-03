@@ -22,15 +22,21 @@ type RunParams<T extends Record<string, FunctionTool>> = {
 // TOOD: Rewrite
 export const waitForComplete = async (
   run: Run,
-  params: RunParams<any>
+  params: RunParams<any>,
+  timeout?: number
 ): Promise<Run> => {
-  run = await poll(run, params);
+  const start = Date.now();
+
+  run = await poll(run, params, timeout);
 
   // handle all actions
   if (run.status === "requires_action" && run.required_action) {
     run = await runAndSubmitTools(run, params);
-
-    return await waitForComplete(run, params);
+    const newTimeout = timeout ? timeout - (Date.now() - start) : undefined;
+    if (newTimeout && newTimeout <= 0) {
+      return run;
+    }
+    return await waitForComplete(run, params, newTimeout);
   }
 
   return run;
@@ -54,9 +60,10 @@ export const waitForRequiredAction = async <
   T extends Record<string, FunctionTool>
 >(
   run: Run,
-  params: RunParams<T>
+  params: RunParams<T>,
+  timeout?: number
 ): Promise<ToolsRequiredResponse> => {
-  run = await poll(run, params);
+  run = await poll(run, params, timeout);
 
   // handle all actions
   if (run.status === "requires_action" && run.required_action) {
@@ -144,11 +151,20 @@ async function runAndSubmitTools(
   return run;
 }
 
-async function poll(run: Run, params: RunParams<any>) {
+async function poll(run: Run, params: RunParams<any>, timeout?: number) {
   const { openai, interval = 1000, abortSignal, onStatusChange } = params;
   let status = run.status;
-  while (run.status === "queued" || run.status === "in_progress") {
-    await new Promise((resolve) => setTimeout(resolve, interval));
+
+  // note: this timeout does not include the processing time, and thus could exceed the supplied value!
+  let remainingTime = timeout ?? Infinity;
+  while (
+    (run.status === "queued" || run.status === "in_progress") &&
+    remainingTime > 0
+  ) {
+    const start = Date.now();
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.min(remainingTime, interval))
+    );
     run = await openai.beta.threads.runs.retrieve(run.thread_id, run.id, {
       signal: abortSignal,
     });
@@ -157,6 +173,7 @@ async function poll(run: Run, params: RunParams<any>) {
       onStatusChange?.(run, status);
       status = run.status;
     }
+    remainingTime -= Date.now() - start;
   }
   return run;
 }

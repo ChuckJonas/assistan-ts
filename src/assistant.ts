@@ -34,8 +34,12 @@ export type Assistant<T extends Record<string, FunctionTool>> = {
 
 type SetupRunResponse = {
   run: OpenAI.Beta.Threads.Runs.Run;
-  toolsRequired: (opts?: RunOptions) => Promise<ToolsRequiredResponse>;
-  complete: (opts?: RunOptions) => Promise<OpenAI.Beta.Threads.Runs.Run>;
+  toolsRequired: (
+    opts?: RunOptions & { timeout?: number }
+  ) => Promise<ToolsRequiredResponse>;
+  complete: (
+    opts?: RunOptions & { timeout?: number }
+  ) => Promise<OpenAI.Beta.Threads.Runs.Run>;
 };
 
 type Props<T extends Record<string, FunctionTool>> = {
@@ -64,18 +68,26 @@ export const assistant = <T extends Record<string, FunctionTool>>({
     overriddenToolbox?: ToolBox<any>
   ): SetupRunResponse => ({
     run,
-    toolsRequired: async (opts?: RunOptions) =>
-      waitForRequiredAction(run, {
-        toolbox: overriddenToolbox ?? toolbox,
-        openai: definition.openai,
-        ...opts,
-      }),
-    complete: async (opts?: RunOptions) =>
-      waitForComplete(run, {
-        toolbox: overriddenToolbox ?? toolbox,
-        openai: definition.openai,
-        ...opts,
-      }),
+    toolsRequired: async (opts) =>
+      waitForRequiredAction(
+        run,
+        {
+          toolbox: overriddenToolbox ?? toolbox,
+          openai: definition.openai,
+          ...opts,
+        },
+        opts?.timeout
+      ),
+    complete: async (opts) =>
+      waitForComplete(
+        run,
+        {
+          toolbox: overriddenToolbox ?? toolbox,
+          openai: definition.openai,
+          ...opts,
+        },
+        opts?.timeout
+      ),
   });
 
   return {
